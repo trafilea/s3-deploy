@@ -37,6 +37,9 @@ inputs:
   files-to-include:
     description: 'Allows for a comma delineated Regex String that matches files to include in the deployment'
     required: false
+  content-encoding:
+    description: 'Sets the Content-Encoding header, by default it is set to gzip'
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
