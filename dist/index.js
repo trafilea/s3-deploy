@@ -27,9 +27,10 @@ const deploy = async function (params) {
       const file = fs.readFileSync(filePath);
       const compressedFile = compressFile(file);
       fs.writeFileSync(filePath, compressedFile);
-      await putInS3(bucketRegion, bucket, filePath, compressedFile, cache, ETag, folder);
-      console.log('  ▹ Invalidate files:', filePath);
-      invalidateDistribution(distId, filePath);
+      const bucketKey = filePath.startsWith(folder) ? filePath.replace(`${folder}/`, '') : filePath;
+      await putInS3(bucketRegion, bucket, bucketKey, compressedFile, cache, ETag);
+      console.log('  ▹ Invalidate files:', bucketKey);
+      invalidateDistribution(distId, bucketKey);
     }
   } catch (e) {
     throw e;
@@ -67,13 +68,13 @@ function getFiles(folder) {
   return result;
 }
 
-async function putInS3(region, bucket, key, object, cacheControl, ETag, folder) {
+async function putInS3(region, bucket, key, object, cacheControl, ETag) {
   try {
     const client = new S3Client({ region });
     const params = {
       Body: object,
       Bucket: bucket,
-      Key: key.startsWith(folder) ? key.replace(`${folder}/`, '') : key,
+      Key: key.startsWith('/') ? key.replace('/', '') : key,
       StorageClass: 'STANDARD',
       CacheControl: cacheControl ? `max-age=${cacheControl}` : 'max-age=31536000',
       ContentEncoding: 'br',
@@ -115,6 +116,7 @@ async function invalidateDistribution(distId, invalidation) {
       InvalidationBatch: {
         CallerReference: currentTimeStamp,
         Paths: {
+          Quantity: 1,
           Items: [invalidation],
         },
       },
