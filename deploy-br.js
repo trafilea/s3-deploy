@@ -21,7 +21,7 @@ const deploy = async function (params) {
       const file = fs.readFileSync(filePath);
       const compressedFile = compressFile(file);
       fs.writeFileSync(filePath, compressedFile);
-      await putInS3(bucketRegion, bucket, filePath, compressedFile, cache, ETag);
+      await putInS3(bucketRegion, bucket, filePath, compressedFile, cache, ETag, folder);
       console.log('  ▹ Invalidate files:', filePath);
       invalidateDistribution(distId, filePath);
     }
@@ -61,13 +61,13 @@ function getFiles(folder) {
   return result;
 }
 
-async function putInS3(region, bucket, key, object, cacheControl, ETag) {
+async function putInS3(region, bucket, key, object, cacheControl, ETag, folder) {
   try {
     const client = new S3Client({ region });
     const params = {
       Body: object,
       Bucket: bucket,
-      Key: key.startsWith('./') ? key.replace('./', '') : key,
+      Key: key.startsWith(folder) ? key.replace(`${folder}/`, '') : key,
       StorageClass: 'STANDARD',
       CacheControl: cacheControl ? `max-age=${cacheControl}` : 'max-age=31536000',
       ContentEncoding: 'br',
@@ -102,7 +102,7 @@ function base64Md5(data) {
 
 async function invalidateDistribution(distId, invalidation) {
   try {
-    const client = new CloudFrontClient({ region });
+    const client = new CloudFrontClient();
     const currentTimeStamp = new Date().getTime().toString();
     const params = {
       DistributionId: distId,
