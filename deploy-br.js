@@ -15,17 +15,17 @@ const deploy = async function (params) {
     const ETag = base64Md5(files.toString());
     console.log('► Target S3 bucket: %s (%s region)', bucket, bucketRegion);
     console.log('► Deploying files: %s', files);
-    console.log('▼ CloudFront');
-    console.log('  ▹ Distribution ID:', distId);
     for (const filePath of files) {
       const file = fs.readFileSync(filePath);
       const compressedFile = compressFile(file);
       fs.writeFileSync(filePath, compressedFile);
       const bucketKey = filePath.startsWith(folder) ? filePath.replace(`${folder}/`, '') : filePath;
       await putInS3(bucketRegion, bucket, bucketKey, compressedFile, cache, ETag);
-      console.log('  ▹ Invalidate files:', bucketKey);
-      invalidateDistribution(distId, bucketKey);
     }
+    console.log('▼ CloudFront');
+    console.log('  ▹ Distribution ID:', distId);
+    console.log('  ▹ Invalidate files:', invalidation);
+    await invalidateDistribution(distId, invalidation);
   } catch (e) {
     throw e;
   }
@@ -105,13 +105,14 @@ async function invalidateDistribution(distId, invalidation) {
   try {
     const client = new CloudFrontClient();
     const currentTimeStamp = new Date().getTime().toString();
+    invalidation = invalidation.startsWith('/') ? invalidation : `/${invalidation}`;
     const params = {
       DistributionId: distId,
       InvalidationBatch: {
         CallerReference: currentTimeStamp,
         Paths: {
           Quantity: 1,
-          Items: [invalidation],
+          Items: [`${invalidation}/*`],
         },
       },
     };
