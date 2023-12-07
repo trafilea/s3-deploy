@@ -30,7 +30,7 @@
     "@aws-sdk/client-cloudfront": "^3.468.0",
     "@aws-sdk/client-s3": "^3.465.0",
     "crypto": "^1.0.1",
-    "mime": "^4.0.0",
+    "mime": "^1.4.1",
     "zlib": "^1.0.5"
   },
   "devDependencies": {
