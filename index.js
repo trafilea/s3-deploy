@@ -18,7 +18,7 @@ async function run() {
     const private = getBooleanInput('private');
     const immutable = getBooleanInput('immutable');
 
-    const cacheControl = core.getInput('cacheControl');
+    const cacheControl = core.getInput('cache-control');
     const cache = core.getInput('cache') || null;
     const filesToInclude = core.getInput('files-to-include') || null;
 
