@@ -9,7 +9,7 @@ const { CreateInvalidationCommand, CloudFrontClient } = require('@aws-sdk/client
 const extensions = ['.xml', '.html', '.htm', '.js', '.css', '.ttf', '.otf', '.txt'];
 
 const deploy = async function (params) {
-  const { folder, bucket, bucketRegion, distId, invalidation, cache } = params;
+  const { folder, bucket, bucketRegion, distId, invalidation, cache, cacheControl } = params;
   try {
     const files = getFiles(folder);
     const ETag = base64Md5(files.toString());
@@ -20,7 +20,7 @@ const deploy = async function (params) {
       const compressedFile = compressFile(file);
       fs.writeFileSync(filePath, compressedFile);
       const bucketKey = filePath.startsWith(folder) ? filePath.replace(`${folder}/`, '') : filePath;
-      await putInS3(bucketRegion, bucket, bucketKey, compressedFile, cache, ETag);
+      await putInS3(bucketRegion, bucket, bucketKey, compressedFile, cache, cacheControl, ETag);
     }
     console.log('▼ CloudFront');
     console.log('  ▹ Distribution ID:', distId);
@@ -62,15 +62,23 @@ function getFiles(folder) {
   return result;
 }
 
-async function putInS3(region, bucket, key, object, cacheControl, ETag) {
+async function putInS3(region, bucket, key, object, cache, cacheControl, ETag) {
   try {
     const client = new S3Client({ region });
+    let cacheControlValue = 'max-age=31536000';
+    if (cache) {
+      cacheControlValue = `max-age=${cache}`;
+    }
+    if (cacheControl) {
+      cacheControlValue = cacheControl;
+    }
+    console.log('► Cache control:', cacheControlValue);
     const params = {
       Body: object,
       Bucket: bucket,
       Key: key.startsWith('/') ? key.replace('/', '') : key,
       StorageClass: 'STANDARD',
-      CacheControl: cacheControl ? `max-age=${cacheControl}` : 'max-age=31536000',
+      CacheControl: cacheControlValue,
       ContentEncoding: 'br',
       ContentType: getContentType(key),
 

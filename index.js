@@ -49,6 +49,7 @@ async function run() {
         distId,
         invalidation,
         cache,
+        cacheControl,
       });
     }
   } catch (error) {
