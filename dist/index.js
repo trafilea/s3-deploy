@@ -78,7 +78,6 @@ async function putInS3(region, bucket, key, object, cache, cacheControl, ETag) {
     if (cacheControl) {
       cacheControlValue = cacheControl;
     }
-    console.log('► Cache control:', cacheControlValue);
     const params = {
       Body: object,
       Bucket: bucket,
