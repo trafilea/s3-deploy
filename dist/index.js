@@ -177,7 +177,7 @@ let deploy = function (params) {
         : '';
     const noCacheArg = noCache ? '--noCache' : '';
     const immutableArg = immutable ? '--immutable' : '';
-    const cacheControlArg = cacheControl ? `--cacheControl ${cacheControl}` : '';
+    const cacheControlArg = cacheControl ? `--cacheControl "${cacheControl}"` : '';
     const privateArg = private ? '--private' : '';
     const cacheFlag = cache ? `--cache ${cache}` : '';
     const filesRegex = filesToInclude ? filesToInclude : '**';
